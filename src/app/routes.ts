@@ -6,13 +6,14 @@ export const routes = {
   HOME: '/',
   FILMS: '/films',
   STARSHIPS: '/starships',
+  STARSHIP_EDIT: '/starships/edit',
 } as const
 
 export const routerRoutes: Routes = [
   {
     path: '',
-    redirectTo: 'films',
     pathMatch: 'full',
+    redirectTo: 'films',
   },
   {
     path: 'films',
@@ -21,5 +22,14 @@ export const routerRoutes: Routes = [
   {
     path: 'starships',
     component: StarshipsPageComponent,
+    children: [
+      {
+        path: 'edit',
+        loadComponent: () =>
+          import('src/app/pages/starship-edit-page.component').then(
+            (m) => m.StarshipEditPageComponent
+          ),
+      },
+    ],
   },
 ]

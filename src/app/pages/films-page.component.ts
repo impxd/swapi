@@ -51,6 +51,7 @@ import { routes } from 'src/app/routes'
 })
 export class FilmsPageComponent {
   readonly routes = routes
+
   readonly swapi = inject(SwapiService)
 
   readonly vm$

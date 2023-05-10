@@ -57,9 +57,8 @@ import { routes } from 'src/app/routes'
 })
 export class AppComponent {
   readonly routes = routes
-
   readonly resources = [
     { title: 'Films', to: routes.FILMS },
     { title: 'Starships', to: routes.STARSHIPS },
-  ]
+  ] as const
 }

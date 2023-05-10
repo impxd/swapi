@@ -1,7 +1,14 @@
 import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
-import { ActivatedRoute, RouterLink } from '@angular/router'
-import { map, of, switchMap } from 'rxjs'
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router'
+import {
+  distinctUntilChanged,
+  filter,
+  map,
+  of,
+  startWith,
+  switchMap,
+} from 'rxjs'
 import { viewModel } from 'src/app/shared/utils'
 import { SwapiService } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
@@ -10,7 +17,7 @@ import { routes } from 'src/app/routes'
   standalone: true,
   selector: 'app-starships-page',
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RouterOutlet],
   template: `
     <ng-container *ngIf="vm$ | async as vm">
       <table>
@@ -23,7 +30,13 @@ import { routes } from 'src/app/routes'
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let starship of vm.starships">
+          <tr
+            *ngFor="let starship of vm.starships"
+            [routerLink]="[routes.STARSHIP_EDIT]"
+            [queryParams]="{ starship: starship.id }"
+            queryParamsHandling="merge"
+            [class.selected]="vm.selectedItem === starship.id"
+          >
             <td>{{ starship.name }}</td>
             <td>{{ starship.model }}</td>
             <td>{{ starship.manufacturer }}</td>
@@ -31,11 +44,35 @@ import { routes } from 'src/app/routes'
           </tr>
         </tbody>
       </table>
+
+      <aside *ngIf="vm.showEdit">
+        <router-outlet />
+      </aside>
     </ng-container>
   `,
   styles: [
     `
       app-starships-page {
+        display: flex;
+        gap: 1.5rem;
+
+        table {
+          width: 100%;
+
+          tbody tr {
+            cursor: pointer;
+
+            &.selected,
+            &:hover {
+              background-color: #cdcdcd;
+            }
+          }
+        }
+
+        aside {
+          width: 100%;
+          max-width: 250px;
+        }
       }
     `,
   ],
@@ -50,15 +87,27 @@ export class StarshipsPageComponent {
 
   constructor() {
     const starships$ = this.route.queryParamMap.pipe(
-      switchMap((queryParams) =>
+      map((queryParams) => queryParams.get('fromFilm')),
+      distinctUntilChanged(),
+      switchMap((fromFilm) =>
         this.swapi
-          .fetchStarships(queryParams.get('fromFilm'))
+          .fetchStarships(fromFilm)
           .pipe(map((response) => response.results))
       )
     )
 
+    const showEdit$ = this.route.queryParamMap.pipe(
+      map((queryParams) => queryParams.has('starship'))
+    )
+
+    const selectedItem$ = this.route.queryParamMap.pipe(
+      map((queryParams) => queryParams.get('starship'))
+    )
+
     this.vm$ = viewModel({
       starships$,
+      showEdit$,
+      selectedItem$,
     })
   }
 }
