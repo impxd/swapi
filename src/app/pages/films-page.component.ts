@@ -24,12 +24,19 @@ import { routes } from 'src/app/routes'
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let movie of vm.films">
-            <td>{{ movie.title }}</td>
-            <td>{{ movie.director }}</td>
-            <td>{{ movie.producer }}</td>
-            <td>{{ movie.release_date }}</td>
-            <td>...</td>
+          <tr *ngFor="let film of vm.films">
+            <td>{{ film.title }}</td>
+            <td>{{ film.director }}</td>
+            <td>{{ film.producer }}</td>
+            <td>{{ film.release_date }}</td>
+            <td>
+              <a
+                [routerLink]="[routes.STARSHIPS]"
+                [queryParams]="{ fromFilm: film.id }"
+              >
+                Starships
+              </a>
+            </td>
           </tr>
         </tbody>
       </table>

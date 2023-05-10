@@ -15,7 +15,7 @@ import { routes } from 'src/app/routes'
     </header>
 
     <nav>
-      <a [routerLink]="routes.HOME">HOME</a>
+      <a [routerLink]="[routes.HOME]">HOME</a>
       <h4>Section Title</h4>
     </nav>
 
@@ -23,7 +23,7 @@ import { routes } from 'src/app/routes'
       <aside>
         <ul>
           <li *ngFor="let link of resources">
-            {{ link.title }}
+            <a [routerLink]="[link.to]">{{ link.title }}</a>
           </li>
         </ul>
       </aside>
@@ -38,5 +38,8 @@ import { routes } from 'src/app/routes'
 export class AppComponent {
   readonly routes = routes
 
-  readonly resources = [{ title: 'Films', to: routes.FILMS }]
+  readonly resources = [
+    { title: 'Films', to: routes.FILMS },
+    { title: 'Starships', to: routes.STARSHIPS },
+  ]
 }
