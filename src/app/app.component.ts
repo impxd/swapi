@@ -15,25 +15,45 @@ import { routes } from 'src/app/routes'
     </header>
 
     <nav>
-      <a [routerLink]="[routes.HOME]">HOME</a>
-      <h4>Section Title</h4>
+      <ul>
+        <li *ngFor="let link of resources">
+          <a [routerLink]="[link.to]">{{ link.title }}</a>
+        </li>
+      </ul>
     </nav>
 
-    <div>
-      <aside>
-        <ul>
-          <li *ngFor="let link of resources">
-            <a [routerLink]="[link.to]">{{ link.title }}</a>
-          </li>
-        </ul>
-      </aside>
-
-      <main>
-        <router-outlet />
-      </main>
-    </div>
+    <main>
+      <router-outlet />
+    </main>
   `,
-  styles: [``],
+  styles: [
+    `
+      app-root {
+        > header {
+          display: flex;
+          align-items: center;
+
+          img {
+            width: 100%;
+            max-width: 120px;
+            height: auto;
+          }
+
+          h2 {
+            margin: 0 auto;
+          }
+        }
+
+        > nav ul {
+          list-style: none;
+          display: flex;
+          gap: 2rem;
+          margin: 2.5rem 0;
+          padding: 0;
+        }
+      }
+    `,
+  ],
 })
 export class AppComponent {
   readonly routes = routes
