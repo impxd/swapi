@@ -79,7 +79,7 @@ import { routes } from 'src/app/routes'
 
             &.selected,
             &:hover {
-              background-color: #dddddd;
+              background-color: #cdcdcd;
             }
           }
         }

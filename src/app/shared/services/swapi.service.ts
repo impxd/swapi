@@ -63,7 +63,12 @@ export class SwapiService {
   }
 
   fetchStarship(id: string) {
-    return this.http.get<Starship>(`${URL}starships/${id}`)
+    return this.http.get<Starship>(`${URL}starships/${id}`).pipe(
+      map((starship) => ({
+        ...starship,
+        id: urlId(starship.url),
+      }))
+    )
   }
 }
 
