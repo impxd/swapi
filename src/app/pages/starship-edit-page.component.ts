@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
 import { ActivatedRoute, RouterLink } from '@angular/router'
-import { filter, map, of, switchMap } from 'rxjs'
+import { filter, map, of, startWith, switchMap } from 'rxjs'
 import { viewModel } from 'src/app/shared/utils'
 import { SwapiService } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
@@ -15,6 +15,14 @@ import { routes } from 'src/app/routes'
     <ng-container *ngIf="vm$ | async as vm">
       <h3>Edit Starship</h3>
       <hr />
+      <div class="progress-bar--container">
+        <div
+          class="progress-bar"
+          [style.display]="vm.form == null ? 'block' : 'none'"
+        >
+          <div></div>
+        </div>
+      </div>
 
       <form>
         <label>
@@ -25,7 +33,7 @@ import { routes } from 'src/app/routes'
             ⓘ
           </i>
         </label>
-        <input type="text" [value]="vm.form.name" />
+        <input type="text" [value]="vm.form?.name" placeholder="- -" />
         <span class="errormessage">-</span>
 
         <label>
@@ -36,7 +44,11 @@ import { routes } from 'src/app/routes'
             ⓘ
           </i>
         </label>
-        <textarea [value]="vm.form.model"></textarea>
+        <textarea
+          [value]="vm.form?.model"
+          rows="2"
+          placeholder="- -"
+        ></textarea>
         <span class="errormessage">-</span>
 
         <label>
@@ -48,14 +60,18 @@ import { routes } from 'src/app/routes'
           </i>
         </label>
 
-        <textarea [value]="vm.form.manufacturer"></textarea>
+        <textarea
+          [value]="vm.form?.manufacturer"
+          rows="3"
+          placeholder="- -"
+        ></textarea>
         <span class="errormessage">-</span>
 
         <label>
           Length
           <i data-tooltip="The length of this starship in meters."> ⓘ </i>
         </label>
-        <input type="text" [value]="vm.form.length" />
+        <input type="text" [value]="vm.form?.length" placeholder="- -" />
         <span class="errormessage">-</span>
 
         <label>
@@ -66,14 +82,22 @@ import { routes } from 'src/app/routes'
             ⓘ
           </i>
         </label>
-        <input type="text" [value]="vm.form.starship_class" />
+        <input
+          type="text"
+          [value]="vm.form?.starship_class"
+          placeholder="- -"
+        />
         <span class="errormessage">-</span>
 
         <label>
           Hyperdrive rating
           <i data-tooltip="The class of this starships hyperdrive."> ⓘ </i>
         </label>
-        <input type="text" [value]="vm.form.hyperdrive_rating" />
+        <input
+          type="text"
+          [value]="vm.form?.hyperdrive_rating"
+          placeholder="- -"
+        />
         <span class="errormessage">-</span>
 
         <label>
@@ -84,7 +108,7 @@ import { routes } from 'src/app/routes'
             ⓘ
           </i>
         </label>
-        <input type="text" [value]="vm.form.crew" />
+        <input type="text" [value]="vm.form?.crew" placeholder="- -" />
         <span class="errormessage">-</span>
 
         <label>
@@ -95,7 +119,7 @@ import { routes } from 'src/app/routes'
             ⓘ
           </i>
         </label>
-        <input type="text" [value]="vm.form.passengers" />
+        <input type="text" [value]="vm.form?.passengers" placeholder="- -" />
         <span class="errormessage">-</span>
 
         <div class="actions">
@@ -113,11 +137,17 @@ import { routes } from 'src/app/routes'
           margin-bottom: 6px;
         }
 
-        > form {
-          label:not(:first-child) {
-            margin-top: 8px;
-          }
+        > .progress-bar--container {
+          overflow-x: clip;
+          position: relative;
 
+          .progress-bar {
+            position: absolute;
+            margin-top: -9px;
+          }
+        }
+
+        > form {
           i {
             margin-left: 4px;
             font-size: 15px;
@@ -135,6 +165,7 @@ import { routes } from 'src/app/routes'
           .errormessage {
             display: block;
             margin-left: 10px;
+            margin-bottom: 8px;
             visibility: hidden;
             font-size: 13px;
             color: red;
@@ -142,6 +173,12 @@ import { routes } from 'src/app/routes'
 
           .actions {
             display: flex;
+            justify-contenr: space-around;
+            gap: 1rem;
+
+            button {
+              width: 100%;
+            }
           }
         }
       }
@@ -159,7 +196,9 @@ export class StarshipEditPageComponent {
   constructor() {
     const form$ = this.route.queryParamMap.pipe(
       switchMap((queryParams) =>
-        this.swapi.fetchStarship(queryParams.get('starship')!)
+        this.swapi
+          .fetchStarship(queryParams.get('starship')!)
+          .pipe(startWith(null))
       )
     )
 

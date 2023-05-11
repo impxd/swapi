@@ -28,6 +28,13 @@ import { routes } from 'src/app/routes'
             <td>Manufacturer</td>
             <td>Length</td>
           </tr>
+
+          <div
+            class="progress-bar"
+            [style.display]="vm.starships == null ? 'block' : 'none'"
+          >
+            <div></div>
+          </div>
         </thead>
         <tbody>
           <tr
@@ -56,15 +63,23 @@ import { routes } from 'src/app/routes'
         display: flex;
         gap: 1.5rem;
 
-        table {
-          width: 100%;
+        > table {
+          overflow-x: clip;
+
+          thead {
+            position: relative;
+
+            .progress-bar {
+              position: absolute;
+            }
+          }
 
           tbody tr {
             cursor: pointer;
 
             &.selected,
             &:hover {
-              background-color: #cdcdcd;
+              background-color: #dddddd;
             }
           }
         }
@@ -93,7 +108,8 @@ export class StarshipsPageComponent {
         this.swapi
           .fetchStarships(fromFilm)
           .pipe(map((response) => response.results))
-      )
+      ),
+      startWith(null)
     )
 
     const showEdit$ = this.route.queryParamMap.pipe(

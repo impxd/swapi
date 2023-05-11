@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
 import { RouterLink } from '@angular/router'
-import { map, of } from 'rxjs'
+import { map, merge, of, share, startWith } from 'rxjs'
 import { viewModel } from 'src/app/shared/utils'
 import { SwapiService } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
@@ -22,6 +22,13 @@ import { routes } from 'src/app/routes'
             <td>Release date</td>
             <td>Actions</td>
           </tr>
+
+          <div
+            class="progress-bar"
+            [style.display]="vm.films == null ? 'block' : 'none'"
+          >
+            <div></div>
+          </div>
         </thead>
         <tbody>
           <tr *ngFor="let film of vm.films">
@@ -45,6 +52,17 @@ import { routes } from 'src/app/routes'
   styles: [
     `
       app-films-page {
+        > table {
+          overflow-x: clip;
+
+          thead {
+            position: relative;
+
+            .progress-bar {
+              position: absolute;
+            }
+          }
+        }
       }
     `,
   ],
@@ -57,9 +75,10 @@ export class FilmsPageComponent {
   readonly vm$
 
   constructor() {
-    const films$ = this.swapi
-      .fetchFilms()
-      .pipe(map((response) => response.results))
+    const films$ = this.swapi.fetchFilms().pipe(
+      map((response) => response.results),
+      startWith(null)
+    )
 
     this.vm$ = viewModel({
       films$,

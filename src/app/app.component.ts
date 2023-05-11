@@ -11,7 +11,7 @@ import { routes } from 'src/app/routes'
   template: `
     <header>
       <img src="/assets/logo.png" alt="Star Wars" />
-      <h2>Starwars API</h2>
+      <h2>Star Wars API</h2>
     </header>
 
     <nav>
