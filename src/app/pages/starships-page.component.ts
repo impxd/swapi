@@ -2,16 +2,21 @@ import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router'
 import {
+  catchError,
   distinctUntilChanged,
   filter,
+  share,
   map,
   of,
   startWith,
   switchMap,
+  partition,
+  merge,
 } from 'rxjs'
 import { viewModel } from 'src/app/shared/utils'
 import { SwapiService } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
+import { HttpErrorResponse } from '@angular/common/http'
 
 @Component({
   standalone: true,
@@ -52,6 +57,10 @@ import { routes } from 'src/app/routes'
               <td>{{ starship.length }}</td>
             </a>
           </tr>
+
+          <tr *ngIf="vm.error" class="error">
+            <td colspan="5">{{ vm.error }}</td>
+          </tr>
         </tbody>
       </table>
 
@@ -85,12 +94,19 @@ import { routes } from 'src/app/routes'
           }
 
           tbody tr {
-            &:hover {
+            &:not(.error):hover {
               background-color: #dddddd;
             }
 
             &.selected {
               background-color: #cdcdcd;
+            }
+
+            &.error {
+              td {
+                text-align: center;
+                color: var(--error);
+              }
             }
 
             a {
@@ -136,14 +152,30 @@ export class StarshipsPageComponent {
   readonly vm$
 
   constructor() {
-    const starships$ = this.route.queryParamMap.pipe(
+    const starshipsRequest$ = this.route.queryParamMap.pipe(
       map((queryParams) => queryParams.get('fromFilm')),
       distinctUntilChanged(),
       switchMap((fromFilm) =>
-        this.swapi
-          .fetchStarships(fromFilm)
-          .pipe(map((response) => response.results))
+        this.swapi.fetchStarships(fromFilm).pipe(
+          map((response) => response.results),
+          catchError((error: HttpErrorResponse) => of(error))
+        )
       ),
+      share()
+    )
+
+    const [starshipsError$, starshipsSuccess$] = partition(
+      starshipsRequest$,
+      (value): value is HttpErrorResponse => value instanceof HttpErrorResponse
+    )
+
+    const starships$ = merge(
+      starshipsSuccess$,
+      starshipsError$.pipe(map(() => []))
+    ).pipe(startWith(null))
+
+    const error$ = starshipsError$.pipe(
+      map(() => 'Network connection error'),
       startWith(null)
     )
 
@@ -157,6 +189,7 @@ export class StarshipsPageComponent {
 
     this.vm$ = viewModel({
       starships$,
+      error$,
       showEdit$,
       selectedItem$,
     })

@@ -1,4 +1,4 @@
-import { combineLatest, ObservableInput } from 'rxjs'
+import { combineLatest, type ObservableInput } from 'rxjs'
 
 export const viewModel = <T extends Record<string, ObservableInput<any>>>(
   sourcesObject: T

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
-import { forkJoin, map, of, switchMap } from 'rxjs'
+import { delay, forkJoin, map, of, switchMap } from 'rxjs'
 
 const URL = 'https://swapi.dev/api/'
 
@@ -77,7 +77,7 @@ export class SwapiService {
     // return from localStorage if exists
     const starship = this.localStorage.getItem(id)
     if (starship && resource !== 'remote')
-      return of(JSON.parse(starship) as Starship)
+      return of(JSON.parse(starship) as Starship).pipe(delay(50))
 
     return this.http.get<Starship>(`${URL}starships/${id}`)
   }

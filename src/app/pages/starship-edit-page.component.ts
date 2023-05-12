@@ -4,26 +4,23 @@ import { ActivatedRoute, RouterLink } from '@angular/router'
 import {
   Observable,
   Subject,
-  combineLatest,
+  catchError,
   exhaustMap,
   filter,
   finalize,
-  fromEvent,
   map,
   merge,
   of,
+  partition,
   repeat,
-  repeatWhen,
   scan,
   share,
   shareReplay,
   startWith,
   switchMap,
   takeUntil,
-  tap,
   timer,
 } from 'rxjs'
-import { boolean, z } from 'zod'
 import { viewModel } from 'src/app/shared/utils'
 import {
   type Starship,
@@ -31,6 +28,7 @@ import {
 } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
 import { Starship as StarshipSchema } from 'src/app/shared/schemas'
+import { HttpErrorResponse } from '@angular/common/http'
 
 @Component({
   standalone: true,
@@ -52,7 +50,7 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
       <div class="progress-bar--container">
         <div
           class="progress-bar"
-          [style.display]="vm.form == null ? 'block' : 'none'"
+          [style.display]="vm.initFormLoading ? 'block' : 'none'"
         >
           <div></div>
         </div>
@@ -281,6 +279,12 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
           }}
           to proceed
         </span>
+        <span
+          class="errormessage"
+          [style.display]="vm.error ? 'block' : 'none'"
+        >
+          {{ vm.error }}
+        </span>
       </form>
 
       <!-- Top overlays -->
@@ -385,8 +389,9 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
               }
             }
 
-            & + .errormessage {
+            & ~ .errormessage {
               text-align: right;
+              visibility: visible;
             }
           }
         }
@@ -414,9 +419,24 @@ export class StarshipEditPageComponent {
       )
     )
 
-    const initForm$ = loadAction$.pipe(
-      switchMap((starship) => this.swapi.fetchStarship(starship)),
-      shareReplay(1)
+    const initFormRequest$ = loadAction$.pipe(
+      switchMap((starship) =>
+        this.swapi
+          .fetchStarship(starship)
+          .pipe(catchError((error: HttpErrorResponse) => of(error)))
+      ),
+      share()
+    )
+
+    const [initFormError$, initForm$] = partition(
+      initFormRequest$,
+      (value): value is HttpErrorResponse => value instanceof HttpErrorResponse
+    )
+
+    const initFormLoading$ = merge(
+      of(false),
+      loadAction$.pipe(map(() => true)),
+      initFormRequest$.pipe(map(() => false))
     )
 
     const form$ = merge(
@@ -490,8 +510,9 @@ export class StarshipEditPageComponent {
 
     const validations$ = form$.pipe(
       map((form): Map<string, string[]> => {
-        const r = this.schema.safeParse(form)
+        if (form == null) return new Map()
 
+        const r = this.schema.safeParse(form)
         if (r.success) return new Map()
 
         return new Map(Object.entries(r.error.flatten().fieldErrors))
@@ -545,11 +566,19 @@ export class StarshipEditPageComponent {
       startWith(null)
     )
 
+    const error$ = merge(
+      of(null),
+      loadAction$.pipe(map(() => null)),
+      initFormError$.pipe(map(() => 'Network connection error'))
+    )
+
     this.vm$ = viewModel({
+      initFormLoading$,
       form$,
       validations$,
       changes$,
       success$,
+      error$,
     })
   }
 

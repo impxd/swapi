@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
 import { RouterLink } from '@angular/router'
-import { map, merge, of, share, startWith } from 'rxjs'
+import { catchError, merge, of, partition, share, startWith, map } from 'rxjs'
 import { viewModel } from 'src/app/shared/utils'
 import { SwapiService } from 'src/app/shared/services/swapi.service'
 import { routes } from 'src/app/routes'
+import { HttpErrorResponse } from '@angular/common/http'
 
 @Component({
   standalone: true,
@@ -45,6 +46,10 @@ import { routes } from 'src/app/routes'
               </a>
             </td>
           </tr>
+
+          <tr *ngIf="vm.error" class="error">
+            <td colspan="5">{{ vm.error }}</td>
+          </tr>
         </tbody>
       </table>
     </ng-container>
@@ -62,6 +67,13 @@ import { routes } from 'src/app/routes'
               position: absolute;
             }
           }
+
+          tbody tr.error {
+            td {
+              text-align: center;
+              color: var(--error);
+            }
+          }
         }
       }
     `,
@@ -75,13 +87,29 @@ export class FilmsPageComponent {
   readonly vm$
 
   constructor() {
-    const films$ = this.swapi.fetchFilms().pipe(
+    const filmsRequest$ = this.swapi.fetchFilms().pipe(
       map((response) => response.results),
+      catchError((error: HttpErrorResponse) => of(error)),
+      share()
+    )
+
+    const [filmsError$, filmsSuccess$] = partition(
+      filmsRequest$,
+      (value): value is HttpErrorResponse => value instanceof HttpErrorResponse
+    )
+
+    const films$ = merge(filmsSuccess$, filmsError$.pipe(map(() => []))).pipe(
+      startWith(null)
+    )
+
+    const error$ = filmsError$.pipe(
+      map(() => 'Network connection error'),
       startWith(null)
     )
 
     this.vm$ = viewModel({
       films$,
+      error$,
     })
   }
 }
