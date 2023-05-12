@@ -5,7 +5,7 @@ export const StarshipLength = z
   .trim()
   .nonempty()
   .transform((str) => str.replace(/,/g, ''))
-  .pipe(z.coerce.number().nonnegative())
+  .pipe(z.union([z.coerce.number().nonnegative(), z.literal('unknown')]))
 
 export const StarshipHyperdriveRating = StarshipLength
 
@@ -17,6 +17,7 @@ export const StarshipCrew = z
   .pipe(
     z.union([
       z.coerce.number().nonnegative(),
+      z.literal('unknown'),
       z
         .string()
         .nonempty()

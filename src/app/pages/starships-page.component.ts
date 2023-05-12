@@ -37,27 +37,21 @@ import { routes } from 'src/app/routes'
           </div>
         </thead>
         <tbody>
-          <ng-container *ngFor="let starship of vm.starships">
-            <tr
-              *ngIf="{ isSelected: vm.selectedItem === starship.id } as it"
-              [class.selected]="it.isSelected"
-            >
-              <a
-                [routerLink]="
-                  it.isSelected ? [routes.STARSHIPS] : [routes.STARSHIP_EDIT]
-                "
-                [queryParams]="
-                  it.isSelected ? { starship: null } : { starship: starship.id }
-                "
-                queryParamsHandling="merge"
-              >
-                <td>{{ starship.name }}</td>
-                <td>{{ starship.model }}</td>
-                <td>{{ starship.manufacturer }}</td>
-                <td>{{ starship.length }}</td>
-              </a>
-            </tr></ng-container
+          <tr
+            *ngFor="let starship of vm.starships"
+            [class.selected]="vm.selectedItem === starship.id"
           >
+            <a
+              [routerLink]="[routes.STARSHIP_EDIT]"
+              [queryParams]="{ starship: starship.id }"
+              queryParamsHandling="merge"
+            >
+              <td>{{ starship.name }}</td>
+              <td>{{ starship.model }}</td>
+              <td>{{ starship.manufacturer }}</td>
+              <td>{{ starship.length }}</td>
+            </a>
+          </tr>
         </tbody>
       </table>
 
