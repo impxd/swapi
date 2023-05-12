@@ -39,7 +39,9 @@ export class SwapiService {
         ? this.fetchFilm(fromFilm).pipe(
             switchMap((film) =>
               forkJoin(
-                film.starships.map((url) => this.fetchStarship(urlId(url)))
+                film.starships.map((url) =>
+                  this.fetchStarship(urlId(url), 'remote')
+                )
               ).pipe(
                 map(
                   (results): FetchStarships => ({
@@ -71,10 +73,11 @@ export class SwapiService {
 
   // Local & Remote implementations
 
-  fetchStarship(id: string) {
+  fetchStarship(id: string, resource?: 'local' | 'remote') {
     // return from localStorage if exists
     const starship = this.localStorage.getItem(id)
-    if (starship) return of(JSON.parse(starship) as Starship)
+    if (starship && resource !== 'remote')
+      return of(JSON.parse(starship) as Starship)
 
     return this.http.get<Starship>(`${URL}starships/${id}`)
   }
