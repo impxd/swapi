@@ -17,7 +17,7 @@
 
 [data-tooltip] {
   position: relative;
-  cursor: help
+  cursor: help;
 }
 
 [data-tooltip]::after {
@@ -37,7 +37,7 @@
   padding: 8px;
   width: 250px;
   transform: translateY(-20px);
-  transition: all 150ms cubic-bezier(.25, .8, .25, 1);
+  transition: all 150ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 [data-tooltip]:hover::after {
@@ -45,7 +45,6 @@
   transform: translateY(0);
   transition-duration: 300ms;
 }
-
 
 /* Progress bar */
 
@@ -65,12 +64,12 @@
 
 @keyframes indeterminateAnimation {
   0% {
-    transform:  translateX(0) scaleX(0);
+    transform: translateX(0) scaleX(0);
   }
   40% {
-    transform:  translateX(0) scaleX(0.4);
+    transform: translateX(0) scaleX(0.4);
   }
   100% {
-    transform:  translateX(100%) scaleX(0.5);
+    transform: translateX(100%) scaleX(0.5);
   }
 }

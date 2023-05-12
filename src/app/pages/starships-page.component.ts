@@ -55,7 +55,7 @@ import { routes } from 'src/app/routes'
         </tbody>
       </table>
 
-      <aside *ngIf="vm.showEdit">
+      <aside [class.open]="vm.showEdit">
         <a
           [routerLink]="[routes.STARSHIPS]"
           [queryParams]="{ starship: null }"
@@ -71,9 +71,9 @@ import { routes } from 'src/app/routes'
     `
       app-starships-page {
         display: flex;
-        gap: 1.5rem;
 
         > table {
+          min-height: 880px;
           overflow-x: clip;
 
           thead {
@@ -101,8 +101,18 @@ import { routes } from 'src/app/routes'
         }
 
         aside {
-          width: 100%;
+          width: 0px;
           max-width: 250px;
+          transform: translateX(100px);
+          opacity: 0;
+          transition: transform, opacity 100ms ease-in-out;
+
+          &.open {
+            width: 100%;
+            transform: translateX(0);
+            opacity: 1;
+            margin-left: 1.5rem;
+          }
 
           a {
             float: right;
