@@ -453,19 +453,17 @@ export class StarshipEditPageComponent {
           filter(Boolean),
           map(
             (form) =>
-              new Map(
-                Object.keys(initForm)
-                  .filter(
-                    (key) =>
-                      JSON.stringify(initForm[key as keyof typeof initForm]) !==
-                      JSON.stringify(form[key as keyof typeof form])
-                  )
-                  .map((key) => [key, true])
+              new Set(
+                Object.keys(initForm).filter(
+                  (key) =>
+                    JSON.stringify(initForm[key as keyof typeof initForm]) !==
+                    JSON.stringify(form[key as keyof typeof form])
+                )
               )
           )
         )
       ),
-      startWith(new Map<string, boolean>())
+      startWith(new Set<string>())
     )
 
     this.vm$ = viewModel({
