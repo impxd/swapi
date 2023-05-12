@@ -2,9 +2,12 @@ import { CommonModule } from '@angular/common'
 import { Component, ViewEncapsulation, inject } from '@angular/core'
 import { ActivatedRoute, RouterLink } from '@angular/router'
 import {
+  Observable,
   Subject,
   combineLatest,
+  exhaustMap,
   filter,
+  fromEvent,
   map,
   merge,
   of,
@@ -259,6 +262,16 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
           to proceed
         </span>
       </form>
+
+      <!-- Top overlays -->
+
+      <dialog id="dialog">
+        <form method="dialog">
+          <p>Do you confirm the action?</p>
+          <button type="submit" value="ok" autofocus>ok</button>
+          <button type="submit" value="cancel">cancel</button>
+        </form>
+      </dialog>
     </ng-container>
   `,
   styles: [
@@ -492,6 +505,28 @@ export class StarshipEditPageComponent {
         > => set.has(a.type)
       )
     )
+  }
+
+  fromUIConfirm() {
+    return new Observable<'ok' | 'cancel'>((observer) => {
+      const dialogEl =
+        window.document.querySelector<HTMLDialogElement>('#dialog')!
+      dialogEl.returnValue = 'cancel'
+
+      function close() {
+        observer.next(dialogEl.returnValue as 'ok' | 'cancel')
+        observer.complete()
+      }
+
+      dialogEl.addEventListener('close', close)
+
+      dialogEl.showModal()
+
+      return () => {
+        dialogEl.removeEventListener('close', close)
+        dialogEl.close()
+      }
+    })
   }
 
   // Utils
