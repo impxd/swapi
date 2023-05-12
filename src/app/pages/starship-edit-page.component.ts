@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common'
-import { Component, ViewEncapsulation, inject } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ViewEncapsulation,
+  inject,
+} from '@angular/core'
 import { ActivatedRoute, RouterLink } from '@angular/router'
 import {
   Observable,
@@ -35,6 +40,7 @@ import { HttpErrorResponse } from '@angular/common/http'
   selector: 'app-starship-edit-page',
   encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-container *ngIf="vm$ | async as vm">
       <h3>
