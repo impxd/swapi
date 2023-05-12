@@ -37,22 +37,38 @@ import { routes } from 'src/app/routes'
           </div>
         </thead>
         <tbody>
-          <tr
-            *ngFor="let starship of vm.starships"
-            [routerLink]="[routes.STARSHIP_EDIT]"
-            [queryParams]="{ starship: starship.id }"
-            queryParamsHandling="merge"
-            [class.selected]="vm.selectedItem === starship.id"
+          <ng-container *ngFor="let starship of vm.starships">
+            <tr
+              *ngIf="{ isSelected: vm.selectedItem === starship.id } as it"
+              [class.selected]="it.isSelected"
+            >
+              <a
+                [routerLink]="
+                  it.isSelected ? [routes.STARSHIPS] : [routes.STARSHIP_EDIT]
+                "
+                [queryParams]="
+                  it.isSelected ? { starship: null } : { starship: starship.id }
+                "
+                queryParamsHandling="merge"
+              >
+                <td>{{ starship.name }}</td>
+                <td>{{ starship.model }}</td>
+                <td>{{ starship.manufacturer }}</td>
+                <td>{{ starship.length }}</td>
+              </a>
+            </tr></ng-container
           >
-            <td>{{ starship.name }}</td>
-            <td>{{ starship.model }}</td>
-            <td>{{ starship.manufacturer }}</td>
-            <td>{{ starship.length }}</td>
-          </tr>
         </tbody>
       </table>
 
       <aside *ngIf="vm.showEdit">
+        <a
+          [routerLink]="[routes.STARSHIPS]"
+          [queryParams]="{ starship: null }"
+          queryParamsHandling="merge"
+        >
+          ✕
+        </a>
         <router-outlet />
       </aside>
     </ng-container>
@@ -75,11 +91,17 @@ import { routes } from 'src/app/routes'
           }
 
           tbody tr {
-            cursor: pointer;
-
-            &.selected,
             &:hover {
+              background-color: #dddddd;
+            }
+
+            &.selected {
               background-color: #cdcdcd;
+            }
+
+            a {
+              display: contents;
+              color: inherit;
             }
           }
         }
@@ -87,6 +109,15 @@ import { routes } from 'src/app/routes'
         aside {
           width: 100%;
           max-width: 250px;
+
+          a {
+            float: right;
+            margin-top: 1px;
+            margin-left: 8px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: inherit;
+          }
         }
       }
     `,
