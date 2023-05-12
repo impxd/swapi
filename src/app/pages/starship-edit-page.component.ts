@@ -7,16 +7,21 @@ import {
   combineLatest,
   exhaustMap,
   filter,
+  finalize,
   fromEvent,
   map,
   merge,
   of,
+  repeat,
+  repeatWhen,
   scan,
   share,
   shareReplay,
   startWith,
   switchMap,
+  takeUntil,
   tap,
+  timer,
 } from 'rxjs'
 import { boolean, z } from 'zod'
 import { viewModel } from 'src/app/shared/utils'
@@ -34,7 +39,15 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
   imports: [CommonModule, RouterLink],
   template: `
     <ng-container *ngIf="vm$ | async as vm">
-      <h3>Edit Starship</h3>
+      <h3>
+        Edit Starship
+        <i
+          *ngIf="vm.form?._id"
+          data-tooltip="Saved on the local storage database"
+        >
+          💾
+        </i>
+      </h3>
       <hr />
       <div class="progress-bar--container">
         <div
@@ -227,6 +240,7 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
 
         <div class="actions">
           <button
+            *ngIf="vm.success !== true"
             type="submit"
             [disabled]="
               vm.form == null ||
@@ -238,23 +252,29 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
           </button>
 
           <button
+            *ngIf="vm.success !== true"
             type="button"
             [disabled]="vm.form == null || vm.changes.size === 0"
             (click)="dispatch({ type: 'reset' })"
           >
             Reset
           </button>
+
           <button
+            *ngIf="vm.success !== true && vm.form?._id != null"
             type="button"
-            [disabled]="vm.form == null || vm.form.id == null"
-            (click)="dispatch({ type: 'delete', id: vm.form?.id! })"
+            (click)="dispatch({ type: 'delete', id: vm.form?._id! })"
           >
-            Delete
+            Remove
+          </button>
+
+          <button *ngIf="vm.success" type="button" class="success">
+            ✓ Action succeed
           </button>
         </div>
         <span
           class="errormessage"
-          [style.visibility]="vm.validations.size > 0 ? 'visible' : 'hidden'"
+          [style.display]="vm.validations.size > 0 ? 'block' : 'none'"
         >
           Fix {{ vm.validations.size }} error{{
             vm.validations.size === 1 ? '' : 's'
@@ -269,7 +289,7 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
         <form method="dialog">
           <p>Do you confirm the action?</p>
           <button type="submit" value="ok" autofocus>ok</button>
-          <button type="submit" value="cancel">cancel</button>
+          <button type="submit" value="">cancel</button>
         </form>
       </dialog>
     </ng-container>
@@ -280,6 +300,14 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
         > h3 {
           margin-top: 0;
           margin-bottom: 6px;
+          display: flex;
+          justify-content: space-between;
+
+          i {
+            padding-top: 4px;
+            font-size: 15px;
+            font-style: normal;
+          }
         }
 
         > .progress-bar--container {
@@ -349,6 +377,12 @@ import { Starship as StarshipSchema } from 'src/app/shared/schemas'
               width: 100%;
               margin: 0;
               padding: 10px 16px;
+
+              &.success {
+                font-weight: 500;
+                color: white;
+                background-color: var(--variable);
+              }
             }
 
             & + .errormessage {
@@ -371,9 +405,13 @@ export class StarshipEditPageComponent {
   readonly vm$
 
   constructor() {
-    const loadAction$ = this.route.queryParamMap.pipe(
-      map((queryParams) => queryParams.get('starship')),
-      filter(Boolean)
+    const loadAction$ = merge(
+      this.route.queryParamMap.pipe(
+        map((queryParams) => queryParams.get('starship')),
+        filter(Boolean),
+        takeUntil(this.on('reload')),
+        repeat()
+      )
     )
 
     const initForm$ = loadAction$.pipe(
@@ -479,10 +517,39 @@ export class StarshipEditPageComponent {
       startWith(new Set<string>())
     )
 
+    const success$ = merge(
+      this.on('submit', 'delete').pipe(
+        exhaustMap((a) =>
+          this.fromUIConfirm().pipe(
+            switchMap(() =>
+              a.type === 'submit'
+                ? this.swapi.updateStarship(a.form)
+                : this.swapi.deleteStarship(a.id)
+            ),
+            map(() => true)
+          )
+        )
+      )
+    ).pipe(
+      switchMap((success) =>
+        timer(1800).pipe(
+          map(() => null),
+          finalize(() =>
+            this.dispatch({
+              type: 'reload',
+            })
+          ),
+          startWith(success)
+        )
+      ),
+      startWith(null)
+    )
+
     this.vm$ = viewModel({
       form$,
       validations$,
       changes$,
+      success$,
     })
   }
 
@@ -508,13 +575,13 @@ export class StarshipEditPageComponent {
   }
 
   fromUIConfirm() {
-    return new Observable<'ok' | 'cancel'>((observer) => {
+    return new Observable<'ok'>((observer) => {
       const dialogEl =
         window.document.querySelector<HTMLDialogElement>('#dialog')!
-      dialogEl.returnValue = 'cancel'
+      dialogEl.returnValue = ''
 
       function close() {
-        observer.next(dialogEl.returnValue as 'ok' | 'cancel')
+        if (dialogEl.returnValue === 'ok') observer.next('ok')
         observer.complete()
       }
 
@@ -592,6 +659,10 @@ type DeleteAction = {
   id: string
 }
 
+type ReloadAction = {
+  type: 'reload'
+}
+
 type Action =
   | SetNameAction
   | SetModelAction
@@ -604,3 +675,4 @@ type Action =
   | SubmitAction
   | ResetAction
   | DeleteAction
+  | ReloadAction

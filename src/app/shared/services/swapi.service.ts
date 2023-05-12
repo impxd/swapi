@@ -8,7 +8,10 @@ const URL = 'https://swapi.dev/api/'
   providedIn: 'root',
 })
 export class SwapiService {
+  localStorage = window.localStorage
   http = inject(HttpClient)
+
+  // Remote implementation
 
   fetchFilms() {
     return this.http.get<FetchFilms>(URL + 'films').pipe(
@@ -22,9 +25,13 @@ export class SwapiService {
     )
   }
 
+  // Remote implementation
+
   fetchFilm(id: string) {
     return this.http.get<Film>(`${URL}films/${id}`)
   }
+
+  // Remote implementation
 
   fetchStarships(fromFilm: string | null) {
     return (
@@ -62,13 +69,39 @@ export class SwapiService {
     )
   }
 
+  // Local & Remote implementations
+
   fetchStarship(id: string) {
-    return this.http.get<Starship>(`${URL}starships/${id}`).pipe(
-      map((starship) => ({
-        ...starship,
-        id: urlId(starship.url),
-      }))
-    )
+    // return from localStorage if exists
+    const starship = this.localStorage.getItem(id)
+    if (starship) return of(JSON.parse(starship) as Starship)
+
+    return this.http.get<Starship>(`${URL}starships/${id}`)
+  }
+
+  // Local implementation
+
+  updateStarship(form: Starship) {
+    form = structuredClone(form)
+
+    const id = urlId(form.url)
+    form._id = id
+
+    this.localStorage.setItem(id, JSON.stringify(form))
+
+    return of({
+      success: true,
+    })
+  }
+
+  // Local implementation
+
+  deleteStarship(id: string) {
+    this.localStorage.removeItem(id)
+
+    return of({
+      success: true,
+    })
   }
 }
 
@@ -130,4 +163,5 @@ export interface Starship {
   created: Date
   edited: Date
   url: string
+  _id?: string // local db identifier
 }
