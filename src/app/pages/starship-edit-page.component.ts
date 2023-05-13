@@ -26,7 +26,7 @@ import {
   takeUntil,
   timer,
 } from 'rxjs'
-import { viewModel } from 'src/app/shared/utils'
+import { diffKeys, viewModel } from 'src/app/shared/utils'
 import {
   type Starship,
   SwapiService,
@@ -529,16 +529,7 @@ export class StarshipEditPageComponent {
       switchMap((initForm) =>
         form$.pipe(
           filter(Boolean),
-          map(
-            (form) =>
-              new Set(
-                Object.keys(initForm).filter(
-                  (key) =>
-                    JSON.stringify(initForm[key as keyof typeof initForm]) !==
-                    JSON.stringify(form[key as keyof typeof form])
-                )
-              )
-          )
+          map((form) => diffKeys(initForm, form))
         )
       ),
       startWith(new Set<string>())

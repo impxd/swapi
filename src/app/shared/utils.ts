@@ -18,3 +18,13 @@ export const viewModel = <T extends Record<string, ObservableInput<any>>>(
     }
   )
 }
+
+export const diffKeys = <T extends Record<PropertyKey, any>>(a: T, b: T) => {
+  return new Set(
+    Object.keys(a).filter(
+      (key) =>
+        JSON.stringify(a[key as keyof typeof a]) !==
+        JSON.stringify(b[key as keyof typeof b])
+    )
+  )
+}

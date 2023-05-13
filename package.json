@@ -6,7 +6,8 @@
     "start": "ng serve",
     "start:hmr": "ng serve --hmr",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development"
+    "watch": "ng build --watch --configuration development",
+    "test:unit": "vitest"
   },
   "private": true,
   "dependencies": {
@@ -28,6 +29,7 @@
     "@angular/cli": "~16.0.0",
     "@angular/compiler-cli": "^16.0.0",
     "@angular/language-service": "^16.0.0",
-    "typescript": "~5.0.2"
+    "typescript": "~5.0.2",
+    "vitest": "^0.31.0"
   }
 }
